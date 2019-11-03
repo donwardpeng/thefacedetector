@@ -7,7 +7,6 @@ import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 class FaceDetectScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return FaceDetectStateWidget();
   }
 }
@@ -36,7 +35,8 @@ class FaceDetectStateWidget extends State<FaceDetectScreen> {
         ));
   }
 
-  Future detectFaces() async {
+  Future<void> detectFaces() async {
+    print('here');
     final File imageFile =
         await ImagePicker.pickImage(source: ImageSource.gallery);
     final image = FirebaseVisionImage.fromFile(imageFile);

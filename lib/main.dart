@@ -1,7 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'detector_painters.dart';
 import 'dart:io';
 import 'dart:async';
@@ -48,6 +48,34 @@ class _MyHomePageState extends State<MyHomePage> {
           mode: FaceDetectorMode.fast,
           enableLandmarks: false,
           enableContours: false));
+
+/* back button handler */
+  Future<bool> _onWillPop() {
+    return showDialog(
+          context: context,
+          builder: (context) => new AlertDialog(
+            title: new Text('Are you sure?'),
+            content: new Text('Do you want to exit an App?'),
+            actions: <Widget>[
+              new FlatButton(
+                onPressed: () {
+                  setState(() {
+                    _imageFile = null;
+                    _imageSize = null;
+                  });
+                  Navigator.of(context).pop(false);
+                },
+                child: new Text('No'),
+              ),
+              new FlatButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: new Text('Yes'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
 
 /* _getAndScanImage method */
   Future<void> _getAndScanImage() async {
@@ -137,11 +165,11 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildImage() {
     print('_buildImage method called');
     return Container(
-      constraints: const BoxConstraints.expand(),
+      constraints: BoxConstraints.expand(),
       decoration: BoxDecoration(
         image: DecorationImage(
           image: Image.file(_imageFile).image,
-          fit: BoxFit.fill,
+          fit: BoxFit.fitWidth,
         ),
       ),
       child: _imageSize == null || _scanResults == null
@@ -161,28 +189,26 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     _currentDetector = Detector.face;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: _imageFile == null
+            ? Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                    Text('No image selected.'),
+                    RaisedButton(
+                        child: Text("Detect Faces from Gallery Image"),
+                        onPressed: () {
+                          _getAndScanImage();
+                        })
+                  ]))
+            : _buildImage(),
       ),
-      body:
-          // Center(
-          //   child: Column(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: <Widget>[
-          _imageFile == null
-              ? Center(
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                      Text('No image selected.'),
-                      RaisedButton(
-                          child: Text("Detect Faces from Gallery Image"),
-                          onPressed: () {
-                            _getAndScanImage();
-                          })
-                    ]))
-              : _buildImage(),
+      onWillPop: _onWillPop,
     );
   }
 }

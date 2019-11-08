@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'detector_painters.dart';
 import 'dart:io';
+import 'dart:async';
+import 'dart:ui';
 
 void main() => runApp(MyApp());
 
@@ -24,23 +27,11 @@ class MyApp extends StatelessWidget {
         //'/faceDetectCamera': (context) => FaceDetectScreen(),
       },
     );
+  }
 }
 
-  }
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
-
-  PermissionStatus _status;
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -49,45 +40,149 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   File _imageFile;
-  List<Face> _faces;
+  Size _imageSize;
+  dynamic _scanResults;
+  Detector _currentDetector = Detector.text;
+  final FaceDetector _faceDetector = FirebaseVision.instance.faceDetector(
+      FaceDetectorOptions(
+          mode: FaceDetectorMode.fast,
+          enableLandmarks: false,
+          enableContours: false));
 
+/* _getAndScanImage method */
+  Future<void> _getAndScanImage() async {
+    print('_getAndScanImage method called');
+    setState(() {
+      _imageFile = null;
+      _imageSize = null;
+    });
+
+    final File imageFile =
+        await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    if (imageFile != null) {
+      _getImageSize(imageFile);
+      _scanImage(imageFile);
+    }
+
+    setState(() {
+      _imageFile = imageFile;
+    });
+  }
+
+/* _getImageSize method */
+  Future<void> _getImageSize(File imageFile) async {
+    print('_getImageSize method called');
+    final Completer<Size> completer = Completer<Size>();
+
+    final Image image = Image.file(imageFile);
+    image.image.resolve(const ImageConfiguration()).addListener(
+      ImageStreamListener((ImageInfo info, bool _) {
+        completer.complete(Size(
+          info.image.width.toDouble(),
+          info.image.height.toDouble(),
+        ));
+      }),
+    );
+
+    final Size imageSize = await completer.future;
+    setState(() {
+      _imageSize = imageSize;
+    });
+  }
+
+/* _scanImage method */
+  Future<void> _scanImage(File imageFile) async {
+    print('_scanImage method called');
+    setState(() {
+      _scanResults = null;
+    });
+
+    final FirebaseVisionImage visionImage =
+        FirebaseVisionImage.fromFile(imageFile);
+
+    dynamic results;
+    switch (_currentDetector) {
+      case Detector.face:
+        results = await _faceDetector.processImage(visionImage);
+        break;
+      default:
+        return;
+    }
+
+    setState(() {
+      _scanResults = results;
+    });
+  }
+
+/* _buildResults method */
+  CustomPaint _buildResults(Size imageSize, dynamic results) {
+    print('_buildResults method called');
+    CustomPainter painter;
+
+    switch (_currentDetector) {
+      case Detector.face:
+        painter = FaceDetectorPainter(_imageSize, results);
+        break;
+      default:
+        break;
+    }
+
+    return CustomPaint(
+      painter: painter,
+    );
+  }
+
+/* _buildImage() method - build the image to display in body of the app */
+  Widget _buildImage() {
+    print('_buildImage method called');
+    return Container(
+      constraints: const BoxConstraints.expand(),
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: Image.file(_imageFile).image,
+          fit: BoxFit.fill,
+        ),
+      ),
+      child: _imageSize == null || _scanResults == null
+          ? const Center(
+              child: Text(
+                'Scanning...',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 30.0,
+                ),
+              ),
+            )
+          : _buildResults(_imageSize, _scanResults),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    _currentDetector = Detector.face;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            RaisedButton(
-              child: Text('Detect Faces'),
-              onPressed: () {detectFaces();},
-            )
-          ],
-        ),
-      ),
+      body:
+          // Center(
+          //   child: Column(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: <Widget>[
+          _imageFile == null
+              ? Center(
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                      Text('No image selected.'),
+                      RaisedButton(
+                          child: Text("Detect Faces from Gallery Image"),
+                          onPressed: () {
+                            _getAndScanImage();
+                          })
+                    ]))
+              : _buildImage(),
     );
-  }
-
-  Future<void> detectFaces() async {
-    final File imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
-    final image = FirebaseVisionImage.fromFile(imageFile);
-    final faceDetector = FirebaseVision.instance.faceDetector(
-        FaceDetectorOptions(
-            mode: FaceDetectorMode.fast,
-            enableLandmarks: true,
-            enableClassification: false,
-            enableTracking: true));
-    final faces = await faceDetector.processImage(image);
-
-    if (mounted) {
-      setState(() {
-        _imageFile = imageFile;
-        _faces = faces;
-      });
-    }
   }
 }

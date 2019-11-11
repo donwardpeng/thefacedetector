@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:ui' as ui;
+import 'dart:math';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
 
@@ -17,17 +18,48 @@ class FaceDetectorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double scaleX = size.width / absoluteImageSize.width; 
+    final double scaleX = size.width / absoluteImageSize.width;
     final double scaleY = scaleX;
-    final double yShift = size.height/2 - (((absoluteImageSize.width / absoluteImageSize.aspectRatio) * scaleY)/2);  
+    final double yShift = size.height / 2 -
+        (((absoluteImageSize.width / absoluteImageSize.aspectRatio) * scaleY) /
+            2);
     //size.height / absoluteImageSize.height;
 
-    final Paint paint = Paint()
+    final Paint redLine = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
       ..color = Colors.red;
 
+    final Paint blackLine = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.0
+      ..color = Colors.blue;
+
     for (Face face in faces) {
+      Offset baseOfNose = face.getLandmark(FaceLandmarkType.noseBase).position;
+      double baseOfNoseYShifted = baseOfNose.dy * scaleY + yShift;
+      double baseOfNoseXShifted = baseOfNose.dx * scaleX;
+      // Offset baseOfNoseShifted = Offset(baseOfNoseXShifted, baseOfNoseYShifted);
+      double topOfRectForArc = baseOfNoseYShifted -
+          ((face.boundingBox.bottom * scaleY + yShift) - baseOfNoseYShifted) /
+              2;
+      double bottomOfRectForArc = face.boundingBox.bottom * scaleY +
+          yShift -
+          ((face.boundingBox.bottom * scaleY + yShift) - baseOfNoseYShifted) /
+              2;
+      canvas.drawArc(
+          Rect.fromLTRB(
+              baseOfNoseXShifted,
+              topOfRectForArc,
+              face.boundingBox.right * scaleX,
+              bottomOfRectForArc),
+          (0.5 * pi),
+          (0.5 * pi),
+          false,
+          blackLine);
+
+      // Offset baseOfNoseToEndOfLeftMustashe = baseOfNoseShifted + Offset(15, 15);
+      // canvas.drawLine(baseOfNoseShifted, baseOfNoseToEndOfLeftMustashe, blackLine);
       canvas.drawRect(
         Rect.fromLTRB(
           face.boundingBox.left * scaleX,
@@ -35,7 +67,7 @@ class FaceDetectorPainter extends CustomPainter {
           face.boundingBox.right * scaleX,
           face.boundingBox.bottom * scaleY + yShift,
         ),
-        paint,
+        redLine,
       );
     }
   }
@@ -46,4 +78,3 @@ class FaceDetectorPainter extends CustomPainter {
         oldDelegate.faces != faces;
   }
 }
-

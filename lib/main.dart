@@ -46,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final FaceDetector _faceDetector = FirebaseVision.instance.faceDetector(
       FaceDetectorOptions(
           mode: FaceDetectorMode.fast,
-          enableLandmarks: false,
+          enableLandmarks: true,
           enableContours: false));
 
 /* back button handler */

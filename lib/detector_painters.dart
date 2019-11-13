@@ -32,34 +32,64 @@ class FaceDetectorPainter extends CustomPainter {
 
     final Paint blackLine = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5.0
-      ..color = Colors.blue;
+      ..strokeWidth = 15.0
+      ..color = Colors.black54;
 
     for (Face face in faces) {
       Offset baseOfNose = face.getLandmark(FaceLandmarkType.noseBase).position;
       double baseOfNoseYShifted = baseOfNose.dy * scaleY + yShift;
       double baseOfNoseXShifted = baseOfNose.dx * scaleX;
-      // Offset baseOfNoseShifted = Offset(baseOfNoseXShifted, baseOfNoseYShifted);
-      double topOfRectForArc = baseOfNoseYShifted -
-          ((face.boundingBox.bottom * scaleY + yShift) - baseOfNoseYShifted) /
-              2;
-      double bottomOfRectForArc = face.boundingBox.bottom * scaleY +
-          yShift -
-          ((face.boundingBox.bottom * scaleY + yShift) - baseOfNoseYShifted) /
-              2;
+      double bottomOfFaceShifted = face.boundingBox.bottom * scaleY + yShift;
+      double rightSideOfFaceShifted = face.boundingBox.right * scaleX;
+      double leftSideOfFaceShifted = face.boundingBox.left * scaleX;
+
+      double rightThirdX = (rightSideOfFaceShifted - baseOfNoseXShifted) / 3.0;
+      double leftThirdX = (baseOfNoseXShifted - leftSideOfFaceShifted) / 3.0;
+      double thirdY = (bottomOfFaceShifted - baseOfNoseYShifted) / 3.0;
+
+      // Arc 1 is the first arc of the mustache from the nose to the right
+      Rect rightArc1BoundingBox = Rect.fromLTRB(baseOfNoseXShifted, baseOfNoseYShifted,
+          baseOfNoseXShifted + (2 * rightThirdX), baseOfNoseYShifted + thirdY);
+
       canvas.drawArc(
-          Rect.fromLTRB(
-              baseOfNoseXShifted,
-              topOfRectForArc,
-              face.boundingBox.right * scaleX,
-              bottomOfRectForArc),
-          (0.5 * pi),
-          (0.5 * pi),
+          rightArc1BoundingBox,
+          (0),
+          (pi),
           false,
           blackLine);
 
-      // Offset baseOfNoseToEndOfLeftMustashe = baseOfNoseShifted + Offset(15, 15);
-      // canvas.drawLine(baseOfNoseShifted, baseOfNoseToEndOfLeftMustashe, blackLine);
+      // Arc 1 is the first arc of the mustache from the nose to the right
+      Rect leftArc1BoundingBox = Rect.fromLTRB(baseOfNoseXShifted - (leftThirdX * 2), baseOfNoseYShifted,
+          baseOfNoseXShifted, baseOfNoseYShifted + thirdY);
+
+      canvas.drawArc(
+          leftArc1BoundingBox,
+          (0),
+          (pi),
+          false,
+          blackLine);
+
+
+          // Offset baseOfNoseShifted = Offset(baseOfNoseXShifted, baseOfNoseYShifted);
+//      double topOfRectForArc = baseOfNoseYShifted -
+//          ((face.boundingBox.bottom * scaleY + yShift) - baseOfNoseYShifted) /
+//              2;
+//      double bottomOfRectForArc = face.boundingBox.bottom * scaleY +
+//          yShift -
+//          ((face.boundingBox.bottom * scaleY + yShift) - baseOfNoseYShifted) /
+//              2;
+//      canvas.drawArc(
+//          Rect.fromLTRB(
+//              baseOfNoseXShifted,
+//              topOfRectForArc,
+//              face.boundingBox.right * scaleX,
+//              bottomOfRectForArc),
+//          (0.5 * pi),
+//          (0.5 * pi),
+//          false,
+//          blackLine);
+
+
       canvas.drawRect(
         Rect.fromLTRB(
           face.boundingBox.left * scaleX,

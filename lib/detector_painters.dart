@@ -23,16 +23,20 @@ class FaceDetectorPainter extends CustomPainter {
     final double yShift = size.height / 2 -
         (((absoluteImageSize.width / absoluteImageSize.aspectRatio) * scaleY) /
             2);
-    //size.height / absoluteImageSize.height;
+
 
     final Paint redLine = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
       ..color = Colors.red;
 
+    double mustacheStroke = (absoluteImageSize.aspectRatio > 1) ? 5 : 12;
+    print('absoluteImageSize.aspectRatio = ' + absoluteImageSize.aspectRatio.toString());
+    print('mustache stroke = ' + mustacheStroke.toString());
+
     final Paint blackLine = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 15.0
+      ..strokeWidth = mustacheStroke
       ..color = Colors.black54;
 
     for (Face face in faces) {
@@ -43,9 +47,9 @@ class FaceDetectorPainter extends CustomPainter {
       double rightSideOfFaceShifted = face.boundingBox.right * scaleX;
       double leftSideOfFaceShifted = face.boundingBox.left * scaleX;
 
-      double rightThirdX = (rightSideOfFaceShifted - baseOfNoseXShifted) / 3.0;
-      double leftThirdX = (baseOfNoseXShifted - leftSideOfFaceShifted) / 3.0;
-      double thirdY = (bottomOfFaceShifted - baseOfNoseYShifted) / 3.0;
+      double rightThirdX = (rightSideOfFaceShifted - baseOfNoseXShifted) / 5.0;
+      double leftThirdX = (baseOfNoseXShifted - leftSideOfFaceShifted) / 5.0;
+      double thirdY = (bottomOfFaceShifted - baseOfNoseYShifted) / 4.0;
 
       // Arc 1 is the first arc of the mustache from the nose to the right
       Rect rightArc1BoundingBox = Rect.fromLTRB(baseOfNoseXShifted, baseOfNoseYShifted,

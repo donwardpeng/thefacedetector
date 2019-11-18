@@ -78,24 +78,28 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 /* _getAndScanImage method */
-  Future<void> _getAndScanImage() async {
+  Future<void> _getAndScanImage({bool selectedFromCamera}) async {
     print('_getAndScanImage method called');
     setState(() {
       _imageFile = null;
       _imageSize = null;
     });
 
-    final File imageFile =
-        await ImagePicker.pickImage(source: ImageSource.gallery);
+      final File imageFile =
+      await ImagePicker.pickImage(source: selectedFromCamera ? ImageSource.camera : ImageSource.gallery, maxWidth: 1000, maxHeight: 1000);
 
+    print('here');
     if (imageFile != null) {
       _getImageSize(imageFile);
       _scanImage(imageFile);
     }
+    print('here1');
 
     setState(() {
       _imageFile = imageFile;
+      print('here2');
     });
+
   }
 
 /* _getImageSize method */
@@ -174,13 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       child: _imageSize == null || _scanResults == null
           ? const Center(
-              child: Text(
-                'Scanning...',
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 30.0,
-                ),
-              ),
+              child: CircularProgressIndicator()
             )
           : _buildResults(_imageSize, _scanResults),
     );
@@ -203,12 +201,23 @@ class _MyHomePageState extends State<MyHomePage> {
                     RaisedButton(
                         child: Text("Detect Faces from Gallery Image"),
                         onPressed: () {
-                          _getAndScanImage();
-                        })
+                          _getAndScanImage(selectedFromCamera: false);
+                        }),
+                    RaisedButton(
+                          child: Text("Detect Faces from Camera"),
+                          onPressed: () {
+                            _getAndScanImage(selectedFromCamera: true);
+                          })
                   ]))
             : _buildImage(),
       ),
       onWillPop: _onWillPop,
     );
+  }
+
+  @override
+  void dispose() {
+    _faceDetector.close();
+    super.dispose();
   }
 }

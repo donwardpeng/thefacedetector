@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_picker/image_picker.dart';
@@ -85,8 +84,10 @@ class _MyHomePageState extends State<MyHomePage> {
       _imageSize = null;
     });
 
-      final File imageFile =
-      await ImagePicker.pickImage(source: selectedFromCamera ? ImageSource.camera : ImageSource.gallery, maxWidth: 1000, maxHeight: 1000);
+    final File imageFile = await ImagePicker.pickImage(
+        source: selectedFromCamera ? ImageSource.camera : ImageSource.gallery,
+        maxWidth: 1000,
+        maxHeight: 1000);
 
     print('here');
     if (imageFile != null) {
@@ -99,7 +100,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _imageFile = imageFile;
       print('here2');
     });
-
   }
 
 /* _getImageSize method */
@@ -168,20 +168,33 @@ class _MyHomePageState extends State<MyHomePage> {
 /* _buildImage() method - build the image to display in body of the app */
   Widget _buildImage() {
     print('_buildImage method called');
-    return Container(
-      constraints: BoxConstraints.expand(),
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: Image.file(_imageFile).image,
-          fit: BoxFit.fitWidth,
+    return Stack(children: <Widget>[
+      Positioned.fill(
+          child: Container(
+        constraints: BoxConstraints.expand(),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: Image.file(_imageFile).image,
+            fit: BoxFit.fitWidth,
+          ),
         ),
-      ),
-      child: _imageSize == null || _scanResults == null
-          ? const Center(
-              child: CircularProgressIndicator()
+        child: _imageSize == null || _scanResults == null
+            ? const Center(child: CircularProgressIndicator())
+            : _buildResults(_imageSize, _scanResults),
+      )),
+      Positioned(
+          bottom: 25,
+          width: MediaQuery.of(context).size.width,
+          child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+            RaisedButton(
+              child: Text('Save Image'),
+              onPressed: () {},
             )
-          : _buildResults(_imageSize, _scanResults),
-    );
+          ]))
+    ]);
   }
 
   @override
@@ -204,10 +217,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           _getAndScanImage(selectedFromCamera: false);
                         }),
                     RaisedButton(
-                          child: Text("Detect Faces from Camera"),
-                          onPressed: () {
-                            _getAndScanImage(selectedFromCamera: true);
-                          })
+                        child: Text("Detect Faces from Camera"),
+                        onPressed: () {
+                          _getAndScanImage(selectedFromCamera: true);
+                        })
                   ]))
             : _buildImage(),
       ),

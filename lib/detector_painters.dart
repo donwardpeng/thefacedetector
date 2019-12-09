@@ -41,6 +41,8 @@ class FaceDetectorPainter extends CustomPainter {
 
     for (Face face in faces) {
       Offset baseOfNose = face.getLandmark(FaceLandmarkType.noseBase).position;
+      FaceContour leftEye = face.getContour(FaceContourType.leftEye);
+      FaceContour rightEye = face.getContour(FaceContourType.rightEye);
       double baseOfNoseYShifted = baseOfNose.dy * scaleY + yShift;
       double baseOfNoseXShifted = baseOfNose.dx * scaleX;
       double bottomOfFaceShifted = face.boundingBox.bottom * scaleY + yShift;
@@ -51,28 +53,35 @@ class FaceDetectorPainter extends CustomPainter {
       double leftThirdX = (baseOfNoseXShifted - leftSideOfFaceShifted) / 5.0;
       double thirdY = (bottomOfFaceShifted - baseOfNoseYShifted) / 4.0;
 
-      // Arc 1 is the first arc of the mustache from the nose to the right
-      Rect rightArc1BoundingBox = Rect.fromLTRB(baseOfNoseXShifted, baseOfNoseYShifted,
-          baseOfNoseXShifted + (2 * rightThirdX), baseOfNoseYShifted + thirdY);
 
-      canvas.drawArc(
-          rightArc1BoundingBox,
-          (0),
-          (pi),
-          false,
-          blackLine);
+        // draw the arc for the mustache to the right if the right eye is detected
+      if(rightEye != null) {
+        Rect rightArc1BoundingBox = Rect.fromLTRB(
+            baseOfNoseXShifted, baseOfNoseYShifted,
+            baseOfNoseXShifted + (2 * rightThirdX),
+            baseOfNoseYShifted + thirdY);
 
-      // Arc 1 is the first arc of the mustache from the nose to the right
-      Rect leftArc1BoundingBox = Rect.fromLTRB(baseOfNoseXShifted - (leftThirdX * 2), baseOfNoseYShifted,
-          baseOfNoseXShifted, baseOfNoseYShifted + thirdY);
+        canvas.drawArc(
+            rightArc1BoundingBox,
+            (0),
+            (pi),
+            false,
+            blackLine);
+      }
 
-      canvas.drawArc(
-          leftArc1BoundingBox,
-          (0),
-          (pi),
-          false,
-          blackLine);
+      // draw the arc for the mustache to the left if the left eye is detected
+      if (leftEye != null) {
+        Rect leftArc1BoundingBox = Rect.fromLTRB(
+            baseOfNoseXShifted - (leftThirdX * 2), baseOfNoseYShifted,
+            baseOfNoseXShifted, baseOfNoseYShifted + thirdY);
 
+        canvas.drawArc(
+            leftArc1BoundingBox,
+            (0),
+            (pi),
+            false,
+            blackLine);
+      }
 
           // Offset baseOfNoseShifted = Offset(baseOfNoseXShifted, baseOfNoseYShifted);
 //      double topOfRectForArc = baseOfNoseYShifted -

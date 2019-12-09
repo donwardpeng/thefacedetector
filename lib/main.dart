@@ -46,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
       FaceDetectorOptions(
           mode: FaceDetectorMode.fast,
           enableLandmarks: true,
-          enableContours: false));
+          enableContours: true));
 
 /* back button handler */
   Future<bool> _onWillPop() {
